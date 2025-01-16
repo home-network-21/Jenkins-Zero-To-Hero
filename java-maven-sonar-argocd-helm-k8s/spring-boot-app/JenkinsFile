@@ -1,6 +1,7 @@
 pipeline {
   agent {
     docker {
+      // using docker container as jenkins agent, and not an ec2 instance
       image 'abhishekf5/maven-abhishek-docker-agent:v1'
       args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
     }
@@ -8,12 +9,14 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
+        // no need to cloning git repository explicitly, since we chose, 'pipeline script from scm', it gets cloned on its own
         sh 'echo passed'
         //git branch: 'main', url: 'https://github.com/home-network-21/Jenkins-Zero-To-Hero.git'
       }
     }
     stage('Build and Test') {
       steps {
+        // building java application
         sh 'ls -ltr'
         // build the project and create a JAR file
         sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
@@ -32,6 +35,7 @@ pipeline {
     }
     */
     stage('Build and Push Docker Image') {
+      //declaring DOCKER_IMAGE=image from dockerhub and REGISTRY_CREDENTIALS=dockerhub password and username variables.
       environment {
         DOCKER_IMAGE = "abouttime1021/ultimate-cicd:${BUILD_NUMBER}"
         // DOCKERFILE_LOCATION = "java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile"
@@ -39,8 +43,10 @@ pipeline {
       }
       steps {
         script {
+            // building docker image from dockerfile
             sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t ${DOCKER_IMAGE} .'
             def dockerImage = docker.image("${DOCKER_IMAGE}")
+            // https://index.docker.io/v1/ is url of dockerhub, docker.withRegistry is a way of interacting with docker registry , i.e, dockerhub
             docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
                 dockerImage.push()
             }
@@ -58,6 +64,7 @@ pipeline {
                     git config user.email "abouttime1021@gmail.com"
                     git config user.name "home-network-21"
                     BUILD_NUMBER=${BUILD_NUMBER}
+                    // replacing the word 'replaceImageTag' with 'Jenkins Build Number' in deployment.yml in github
                     sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
                     git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
                     git commit -m "Update deployment image to version ${BUILD_NUMBER}"
