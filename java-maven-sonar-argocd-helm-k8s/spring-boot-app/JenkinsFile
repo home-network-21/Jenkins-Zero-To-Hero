@@ -7,8 +7,13 @@ pipeline {
     }
   }
   stages {
-    
-    
+    stage('Checkout') {
+      steps {
+        // no need to cloning git repository explicitly, since we chose, 'pipeline script from scm', it gets cloned on its own
+        sh 'echo passed'
+        //git branch: 'main', url: 'https://github.com/home-network-21/Jenkins-Zero-To-Hero.git'
+      }
+    }
     stage('Build and Test') {
       steps {
         // building java application
