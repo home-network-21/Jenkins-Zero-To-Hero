@@ -1,7 +1,16 @@
+
+It seems like your pipeline syntax is incomplete. The pipeline block needs to be closed properly, and there are some missing components like the agent directive. Here is a corrected version of your Jenkins pipeline:
+
+groovy
+Copy
 pipeline {
-  
-  stages {
-    stage('hello'){
-      echo 'hello'
-  }
+    agent any
+    
+    stages {
+        stage('hello') {
+            steps {
+                echo 'hello'
+            }
+        }
+    }
 }
